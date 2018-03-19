@@ -1,0 +1,31 @@
+#circle {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      right: 50px;
+      bottom: auto;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: red;
+    }
+ #spaceShip{
+
+   width: 0; height: 0;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-bottom: 100px solid red;
+    position: absolute;
+    top: 50px;
+    left: 500px;
+    right: 500px;
+    bottom: auto;
+  }
+#container{
+    position: fixed;
+     width: 1500px;
+      height: 1000px;
+    background-image: url("../img/SpaceBackground1.png");
+}
