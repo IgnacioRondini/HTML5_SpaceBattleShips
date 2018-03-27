@@ -7,14 +7,23 @@
     <script  type="text/javascript" src="./myScripts.js"></script>
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 </head>
-<body onload="gameLoop();"onkeydown="" onkeyup="moveSelection(event);">
+<body onbeforeunload = "gameInit();"onload="gameLoop();"onkeydown="" onkeyup="moveSelection(event);">
 
 <header><h1><i>SpaceShip battle</i></h1></header>
 <main>
 
 <div id ="container">
-    <div id="circle"></div>
+	<div id = "parameters"> 
+		<div id="parameters-life"></div>
+	</div>
+    <div id="C1" class="circle"> </div>
     <div id="spaceShip"></div>
+    <div id="C2" class="circle"> </div>
+    <div id="C3" class="circle"> </div>
+    <div id="C4" class="circle"> </div>
+    <div id="C5" class="circle"> </div>
+    <div id="C6" class="circle"> </div>
+    <div id="C7" class="circle"> </div>
 </div>
 
 
