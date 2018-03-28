@@ -1,46 +1,184 @@
+//"use strict";
 
-var spaceShipParams = {
-	life:100.0
-};
+
+
 globalParameters = {
-	initiated:false
+	initiated: false
 };
+
+/*CLASS SPACESHIP*/
+class SpaceShip {
+  constructor(position) {
+    this.position = position;
+    this.life = 100.;
+    this.class = "spaceShip";
+    this.bulletFactory = new BulletFactory();
+    this.firedBullets = [];
+    this.speed = 1;
+    this.angle = Math.PI/2;
+    this.inertiaAngle = Math.PI/2;
+  }
+    
+    update(dt){
+        
+        var dx = this.speed*dt*Math.cos(this.inertiaAngle)*.1;
+        var dy = this.speed*dt*Math.sin(this.inertiaAngle)*.1;    
+        var left = parseFloat(this.position.left) + dx;
+        var top = parseFloat(this.position.top) + dy;
+        this.position.left = left + "px";
+        this.position.top = top + "px";
+        
+        //update bullets
+        for (var i = 0 ; i < this.firedBullets.length;i++){
+            this.firedBullets[i].update(dt);
+        }
+        
+    }
+    updateView(){
+        
+        //get the corresponding object
+        var element = $('.' + this.class);
+        element.css("top", this.position.top);
+        element.css("left", this.position.left);
+        element.css("transform", "rotate("+ this.angle+"rad");
+        //update view bullets
+        for (var i = 0 ; i < this.firedBullets.length;i++){
+            
+            this.firedBullets[i].updateView();
+        }
+    }
+    
+    fire(){
+        
+        this.firedBullets.push(this.bulletFactory.createBullet(this.position, this.angle));
+        this.firedBullets[this.firedBullets.length - 1].updateView();
+    }
+    
+    turnLeft(){
+        this.angle += Math.PI/8;
+        this.inertiaAngle += Math.PI/8;
+        
+    }
+    
+    turnRight(){
+        this.angle -= Math.PI/8;
+        this.inertiaAngle -= Math.PI/8;
+    }
+    
+    moveTop(){
+        var dt = 1.;
+        var dx = this.speed*dt*Math.cos(this.angle)*1;
+        var dy = this.speed*dt*Math.sin(this.angle)*1;    
+        var left = parseFloat(this.position.left) + dx;
+        var top = parseFloat(this.position.top) + dy;
+        this.speed+=1;
+        this.updateView();
+    }
+    
+    moveDown(){
+        var dt = 1.;
+        var dx = this.speed*dt*Math.cos(this.inertiaAngle)*1;
+        var dy = this.speed*dt*Math.sin(this.inertiaAngle)*1;    
+        var left = parseFloat(this.position.left) - dx;
+        var top = parseFloat(this.position.top) - dy;
+        this.speed-=1;
+        this.updateView();
+    }
+}
+/*END-CLASS SPACESHIP*/
+
+
+/*CLASS BULLET*/
+class Bullet{
+    constructor(position, ID, angle) {
+    this.position = position;
+    this.class = "Bullet";
+    this.ID = ID;
+    this.speed = 1.;
+    this.angle = angle;
+  }
+    
+    update(dt){
+        
+        var dx = this.speed*dt*Math.cos(this.angle);
+        var dy = this.speed*dt*Math.sin(this.angle);
+        
+        
+        var left = parseFloat(this.position.left) + dx;
+        
+        var top = parseFloat(this.position.top) + dy;
+        
+        this.position.left = left + "px";
+        
+        this.position.top = top + "px";
+    }
+    
+    updateView(){
+        var container = $('#container');
+        var element = $('#'+this.ID);
+        
+        //Check if already on container
+        if(element.length ==0){
+        // add bullet
+            container.append('<div id='+this.ID+ ' class = "bullet"></div>');    
+            element = $("#" + this.ID);
+        }
+        
+        element.css("top",this.position.top);
+        element.css("left",this.position.left);
+
+    }
+    
+    removeFromHtml(){
+        
+    }
+}
+/*END CLASS BULLET*/
+
+/*CLASS BULLET Factory*/
+class BulletFactory{
+    
+    constructor() {
+        this.generator = 0;
+    }
+    
+    createBullet(position, angle){
+        alert("create bullet angle:" + angle);
+        this.generator +=1;
+        var bulletPosition =  {left: position.left, top: position.top};
+        return new Bullet(bulletPosition , 
+                          "Bullet_" + this.generator, angle);
+    }
+}
+/*END CLASS BULLET Factory*/
+
+
+
+/*
+    The movement of the spaceship is encapsulated in internal functions.
+    We keep ...ArrowPressed() methods in case we want to do other things.
+*/
 
 function leftArrowPressed() {
-    var element = $('#spaceShip');
-    var left = parseInt(element.css("left")) - 5;
-    $('#spaceShip').css('left',left);
+   mySpaceShip.turnLeft();
 
-                }
+}
 
 function rightArrowPressed() {
-    var element = $('#spaceShip'); 
-    var left = parseInt(element.css("left")) + 5;
-    $('#spaceShip').css('left',left);
+   mySpaceShip.turnRight();
 }
 
 function upArrowPressed() {
-    var element = $('#spaceShip');
-    var top = parseInt(element.css("top")) - 5;
-    $('#spaceShip').css('top',top);
+    mySpaceShip.moveTop();
 }
 
 function downArrowPressed() {
-    var element = $('#spaceShip');
-    var top = parseInt(element.css("top")) + 5;
-    $('#spaceShip').css('top',top);
+    mySpaceShip.moveDown();
 }
 
 function spaceKeyPressed(){
-    var container = $('#container');
-    // add bullet
-    container.append('<div class = "bullet"></div>');
-    var newBullet = $('.bullet').eq(-1);
-    var spaceShip = $('#spaceShip');
-	newBullet.css("top",spaceShip.css("top"));
-	newBullet.css("left",spaceShip.css("left"));
-	newBullet.css("right",spaceShip.css("right"));
-	
+    
+        mySpaceShip.fire();
 }
 
 function moveSelection(event) {
@@ -64,8 +202,14 @@ function moveSelection(event) {
         }
 }
 function gameInit(){
-	listOfCircles = $(".circle");
-	for (i = 0; i < listOfCircles.length; i++) {
+    // Globar variable spaceship
+    var position = {top: "300px",
+                    left: "300px"
+                    }
+    mySpaceShip = new SpaceShip(position);
+    mySpaceShip.updateView();
+	var listOfCircles = $(".circle");
+	for (var i = 0; i < listOfCircles.length; i++) {
 		var left = i*100;
 		var top = i*100;
 		listOfCircles.eq(i).css('left',left);
@@ -80,19 +224,20 @@ function gameLoop()
 		globalParameters.initiated = true;
 	}
     moveRandomCircle();
-    moveBullets();
+    mySpaceShip.update(1.);
+    mySpaceShip.updateView();
     displayParameters();
     setTimeout("gameLoop()",10);
  }
 
 function displayParameters(){
-	$('#parameters-life').html("LIFE: <b>" + spaceShipParams.life+"</b>");
+	$('#parameters-life').html("LIFE: <b>" + mySpaceShip.life+"</b>");
 }
 
 function moveRandomCircle(){
     
     var listOfCircles = $('.circle');
-    for (i = 0; i < listOfCircles.length; i++) {
+    for (var i = 0; i < listOfCircles.length; i++) {
 		var element = listOfCircles.eq(i);
 		var dx = Math.random()-0.5;
 		var left = parseFloat(element.css("left")) - dx*10;
@@ -109,15 +254,4 @@ function moveRandomCircle(){
 		element.css('top',top);
 	}
 
-}
-
-function moveBullets(){
-	
-	var listOfBullets = $('.bullet');
-	for (i = 0; i < listOfBullets.length; i++) {
-		var element = listOfBullets.eq(i);
-		var top = parseInt(element.css("top")) - 5;
-		element.css('top',top);
-		
-	}
 }
