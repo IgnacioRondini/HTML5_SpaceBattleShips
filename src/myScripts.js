@@ -6,28 +6,97 @@ globalParameters = {
 	initiated: false
 };
 
-/*CLASS SPACESHIP*/
-class SpaceShip {
-  constructor(position) {
+/*Class Moving object*/
+
+class MovingObject{
+    constructor(position, ID, ClassType, speed,angle) {
     this.position = position;
-    this.life = 100.;
-    this.class = "spaceShip";
-    this.bulletFactory = new BulletFactory();
-    this.firedBullets = [];
-    this.speed = 1;
-    this.angle = Math.PI/2;
-    this.inertiaAngle = Math.PI/2;
+    this.ID = ID;
+    this.speed = speed;
+    alert("moving object constructor ID:" + ID);
+    alert("moving object constructor angle: "+ angle);
+    alert("moving object position" + position.left);     
+    this.angle = angle;
+    this.inertiaAngle = angle;
+    this.class = ClassType;
   }
-    
     update(dt){
-        
+            alert("update:"+this.ID);
+        alert("speed:"+this.speed);
+        alert("angle intertia:"+this.inertiaAngle);
+        alert("dt:" + dt);
         var dx = this.speed*dt*Math.cos(this.inertiaAngle)*.1;
         var dy = this.speed*dt*Math.sin(this.inertiaAngle)*.1;    
         var left = parseFloat(this.position.left) + dx;
+        alert("this.position.left update before "+ this.position.left);
+        alert("dx:"+dx);
+        alert("left:" +left);
         var top = parseFloat(this.position.top) + dy;
         this.position.left = left + "px";
+        alert("this.position.left ipdate after "+ this.position.left);
         this.position.top = top + "px";
         
+    }
+    
+    updateView(){
+        var container = $('#container');
+        var element = $('#'+this.ID);
+        
+        //Check if already on container
+        if(element.length ==0){
+        // add bullet
+            container.append('<div id='+this.ID+ ' class = '+ this.class + '></div>');    
+            element = $("#" + this.ID);
+        }
+        element.css("transform", "rotate("+ this.angle+"rad");
+        element.css("top",this.position.top);
+        element.css("left",this.position.left);
+
+    }
+    
+}
+
+/*END class moving object*/
+
+/* Class Asteroid */
+class Asteroid extends MovingObject{
+    constructor(position, ID, classType, speed,angle) {
+    super(position, ID,classType,speed,angle)
+    this.life = 100.;
+  }
+    
+}
+/* END Class Asteroid */
+
+/*CLASS Asteroid Factory*/
+class AsteroidFactory{
+    
+    constructor() {
+        this.generator = 0;
+    }
+    
+    createAsteroid(position,speed, angle){
+        this.generator +=1;
+        var bulletPosition =  {left: position.left, top: position.top};
+        return new Asteroid(bulletPosition , 
+                          "Asteroid_" + this.generator, "asteroid",speed, angle);
+    }
+}
+/*END CLASS Asteroid Factory*/
+
+/*CLASS SPACESHIP*/
+class SpaceShip extends MovingObject{
+  constructor(position, ID, speed) {
+    super(position, ID, "spaceShip",speed, -Math.PI/2);
+    this.life = 100.;
+    this.bulletFactory = new BulletFactory();
+    this.firedBullets = [];
+    
+  }
+    
+    update(dt){
+        //update position
+        super.update(dt);        
         //update bullets
         for (var i = 0 ; i < this.firedBullets.length;i++){
             this.firedBullets[i].update(dt);
@@ -36,11 +105,7 @@ class SpaceShip {
     }
     updateView(){
         
-        //get the corresponding object
-        var element = $('.' + this.class);
-        element.css("top", this.position.top);
-        element.css("left", this.position.left);
-        element.css("transform", "rotate("+ this.angle+"rad");
+        super.updateView();
         //update view bullets
         for (var i = 0 ; i < this.firedBullets.length;i++){
             
@@ -50,19 +115,33 @@ class SpaceShip {
     
     fire(){
         
-        this.firedBullets.push(this.bulletFactory.createBullet(this.position, this.angle));
+        var vleft = parseFloat(this.position.left);
+        alert("vleftr:" + vleft);
+        var vtop = parseFloat(this.position.top);
+        var L = 15;
+        vleft += L*Math.sin(this.angle);
+        vleft += "px";
+        alert("vleftr after:" + vleft);
+        vtop += L*Math.cos(this.angle);
+        vtop +="px";
+        var position = {
+            left: vleft,
+            top:vtop
+            
+        };
+        this.firedBullets.push(this.bulletFactory.createBullet(position, this.angle));
         this.firedBullets[this.firedBullets.length - 1].updateView();
     }
     
     turnLeft(){
-        this.angle += Math.PI/8;
-        this.inertiaAngle += Math.PI/8;
+        this.angle -= Math.PI/8;
+        this.inertiaAngle -= Math.PI/8;
         
     }
     
     turnRight(){
-        this.angle -= Math.PI/8;
-        this.inertiaAngle -= Math.PI/8;
+        this.angle += Math.PI/8;
+        this.inertiaAngle += Math.PI/8;
     }
     
     moveTop(){
@@ -89,17 +168,16 @@ class SpaceShip {
 
 
 /*CLASS BULLET*/
-class Bullet{
-    constructor(position, ID, angle) {
-    this.position = position;
-    this.class = "Bullet";
-    this.ID = ID;
-    this.speed = 1.;
-    this.angle = angle;
-  }
+class Bullet extends MovingObject{
+    
+    
+    constructor(position, ID, classType, speed,angle) {
+        super(position, ID,classType,speed,angle)
+        this.life = 10.;
+    }
     
     update(dt){
-        
+
         var dx = this.speed*dt*Math.cos(this.angle);
         var dy = this.speed*dt*Math.sin(this.angle);
         
@@ -111,22 +189,6 @@ class Bullet{
         this.position.left = left + "px";
         
         this.position.top = top + "px";
-    }
-    
-    updateView(){
-        var container = $('#container');
-        var element = $('#'+this.ID);
-        
-        //Check if already on container
-        if(element.length ==0){
-        // add bullet
-            container.append('<div id='+this.ID+ ' class = "bullet"></div>');    
-            element = $("#" + this.ID);
-        }
-        
-        element.css("top",this.position.top);
-        element.css("left",this.position.left);
-
     }
     
     removeFromHtml(){
@@ -143,11 +205,10 @@ class BulletFactory{
     }
     
     createBullet(position, angle){
-        alert("create bullet angle:" + angle);
         this.generator +=1;
         var bulletPosition =  {left: position.left, top: position.top};
         return new Bullet(bulletPosition , 
-                          "Bullet_" + this.generator, angle);
+                          "Bullet_" + this.generator,"bullet",5., angle);
     }
 }
 /*END CLASS BULLET Factory*/
@@ -203,19 +264,23 @@ function moveSelection(event) {
 }
 function gameInit(){
     // Globar variable spaceship
+    
     var position = {top: "300px",
                     left: "300px"
                     }
-    mySpaceShip = new SpaceShip(position);
+    mySpaceShip = new SpaceShip(position,"spaceShip",1.);
+    
     mySpaceShip.updateView();
-	var listOfCircles = $(".circle");
-	for (var i = 0; i < listOfCircles.length; i++) {
-		var left = i*100;
-		var top = i*100;
-		listOfCircles.eq(i).css('left',left);
-		listOfCircles.eq(i).css('top',top);
-		
-	}
+    alert("INIT");
+    //Create one asteroid
+    myAsteroidFactory = new AsteroidFactory();
+    alert("end asteroid factory creation");
+    myAsteroids = [];
+    var asteroidPosition =  {top: "250px", left :"250px"};
+    myAsteroids.push(myAsteroidFactory.createAsteroid(asteroidPosition, 10+ 20.*Math.random(), 0.));
+    alert("creating asteroid angle: "+myAsteroids[0].angle);
+    myAsteroids[0].updateView();
+    
 }
 function gameLoop()
 {	
@@ -223,9 +288,11 @@ function gameLoop()
 		gameInit();
 		globalParameters.initiated = true;
 	}
-    moveRandomCircle();
+ //   moveRandomCircle();
     mySpaceShip.update(1.);
+    myAsteroids[0].update(1.);
     mySpaceShip.updateView();
+    myAsteroids[0].updateView();
     displayParameters();
     setTimeout("gameLoop()",10);
  }
